@@ -3,7 +3,6 @@
 <script lang="ts">
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import RNLogoWhite from "@requestnetwork/shared-icons/rn-logo-white.svelte";
-  import type { Web3Modal } from "@web3modal/ethers5";
   import { ethers } from "ethers";
   import { onDestroy } from "svelte";
   import BuyerInfoForm from "./components/buyer-info-form.svelte";
@@ -41,11 +40,8 @@
   export let hideTotalAmount: boolean = false;
 
   // State
-  let web3Modal: Web3Modal | null = null;
   let currencyDetails: ReturnType<typeof getSupportedCurrencies>;
-  let isCheckingConnection = false;
   let selectedCurrency: Currency | null = null;
-  let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
   let currentPaymentStep: PaymentStep = "currency";
   let createdRequest: any;
   let scrollPosition = 0;
