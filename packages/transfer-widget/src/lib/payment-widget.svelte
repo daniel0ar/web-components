@@ -55,18 +55,10 @@
   // Effects
   $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
 
-  $: isConnected = false;
   $: isModalOpen = false;
   $: currentBuyerInfo = buyerInfo || {
     address: {},
   };
-
-  $: {
-    if (isModalOpen && !isConnected) {
-      isModalOpen = false;
-      currentPaymentStep = "currency";
-    }
-  }
 
   $: {
     if (!isModalOpen) {
@@ -87,41 +79,6 @@
     }
   }
 
-  // Methods
-  async function checkConnectionStatus() {
-    if (isCheckingConnection) return;
-    isCheckingConnection = true;
-
-    const modalConnected = web3Modal?.getIsConnected() ?? false;
-
-    isConnected = modalConnected;
-    isCheckingConnection = false;
-  }
-
-  function startConnectionCheck() {
-    if (connectionCheckInterval) return;
-    connectionCheckInterval = setInterval(checkConnectionStatus, 500);
-  }
-
-  function stopConnectionCheck() {
-    if (connectionCheckInterval) {
-      clearInterval(connectionCheckInterval);
-      connectionCheckInterval = null;
-    }
-  }
-
-  function handleWeb3ModalEvents(newEvent: EventsControllerState) {
-    if (newEvent.data.event === "MODAL_LOADED") {
-      checkWalletState();
-    }
-    if (newEvent.data.event === "CONNECT_SUCCESS") {
-      checkWalletState();
-      isConnected = true;
-    } else if (newEvent.data.event === "DISCONNECT_SUCCESS") {
-      checkWalletState();
-    }
-  }
-
   function toggleBodyScroll(isDisabled: boolean) {
     if (isDisabled) {
       scrollPosition = window.pageYOffset;
@@ -138,10 +95,6 @@
     }
   }
 
-  function checkWalletState() {
-    isConnected = web3Modal?.getIsConnected() ?? false;
-  }
-
   function handleCurrencySelection() {
     if (enableBuyerInfo) {
       currentPaymentStep = "buyer-info";
@@ -150,18 +103,7 @@
     }
   }
 
-  // Lifecycles
-  onMount(() => {
-    web3Modal = initWalletConnector();
-
-    if (web3Modal) {
-      web3Modal.subscribeEvents(handleWeb3ModalEvents);
-      startConnectionCheck();
-    }
-  });
-
   onDestroy(() => {
-    stopConnectionCheck();
     toggleBodyScroll(false);
   });
 </script>
@@ -213,20 +155,16 @@
       amountInUSD === 0 ||
       supportedCurrencies?.length === 0}
     on:click={() => {
-      if (!isConnected) {
-        web3Modal?.open();
-      } else {
-        isModalOpen = true;
-      }
+      isModalOpen = true;
     }}
   >
-    Pay with <RNLogoWhite />
+    Transfer through <RNLogoWhite />
   </button>
 </section>
 
 <Modal
   config={{}}
-  title="Pay with crypto"
+  title="Transfer crypto"
   isOpen={isModalOpen}
   onClose={() => {
     isModalOpen = false;
@@ -237,7 +175,6 @@
       {web3Modal}
       currencies={currencyDetails.currencies}
       bind:selectedCurrency
-      bind:isConnected
       onCurrencySelected={handleCurrencySelection}
     />
   {:else if currentPaymentStep === "buyer-info"}

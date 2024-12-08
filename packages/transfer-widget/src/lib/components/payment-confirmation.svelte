@@ -3,7 +3,6 @@
   import CopyIcon from "@requestnetwork/shared-icons/copy-icon.svelte";
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
-  import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
   import type {
     Currency,
@@ -29,7 +28,6 @@
   export let productInfo: ProductInfo | undefined;
   export let sellerAddress: string;
   export let currentPaymentStep: PaymentStep;
-  export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
   export let builderId: string;
   export let persistRequest: boolean;
@@ -136,7 +134,6 @@
 </script>
 
 <div class="payment-confirmation">
-  <WalletInfo {web3Modal} bind:isConnected />
   <h3>Confirm Payment</h3>
   <div class="payment-confirmation-amount-info">
     <div>
@@ -239,15 +236,9 @@
     >
     <button
       class="btn"
-      disabled={isLoadingPrice || !web3Modal || isPaying}
+      disabled={isLoadingPrice || isPaying}
       on:click={async () => {
         isPaying = true;
-        if (!web3Modal) return;
-
-        const walletProvider = web3Modal.getWalletProvider();
-        const payerAddress = web3Modal.getAddress();
-
-        if (!walletProvider || !payerAddress) return;
 
         try {
           const requestParameters = prepareRequestParameters({
