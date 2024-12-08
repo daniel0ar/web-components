@@ -18,7 +18,6 @@
     prepareRequestParameters,
   } from "../utils/request";
   import Spinner from "./spinner.svelte";
-  import WalletInfo from "./wallet-info.svelte";
   import { ethers } from "ethers";
 
   export let selectedCurrency: Currency;
@@ -28,7 +27,6 @@
   export let productInfo: ProductInfo | undefined;
   export let sellerAddress: string;
   export let currentPaymentStep: PaymentStep;
-  export let isConnected: boolean;
   export let builderId: string;
   export let persistRequest: boolean;
   export let enableBuyerInfo: boolean;
@@ -263,7 +261,7 @@
           const request = await handleRequestPayment({
             requestParameters,
             walletProvider,
-            payerAddress: payerAddress,
+            payerAddress,
             persistRequest,
           });
 

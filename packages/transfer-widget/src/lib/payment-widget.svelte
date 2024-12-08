@@ -3,10 +3,9 @@
 <script lang="ts">
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import RNLogoWhite from "@requestnetwork/shared-icons/rn-logo-white.svelte";
-  import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { ethers } from "ethers";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy } from "svelte";
   import BuyerInfoForm from "./components/buyer-info-form.svelte";
   import CurrencySelector from "./components/currency-selector.svelte";
   import PaymentComplete from "./components/payment-complete.svelte";
@@ -21,7 +20,6 @@
     SupportedCurrencies,
   } from "./types";
   import { getSupportedCurrencies } from "./utils/currencies";
-  import { initWalletConnector } from "./utils/walletConnector";
 
   // Props
   export let sellerInfo: SellerInfo;
@@ -172,7 +170,6 @@
 >
   {#if currentPaymentStep === "currency"}
     <CurrencySelector
-      {web3Modal}
       currencies={currencyDetails.currencies}
       bind:selectedCurrency
       onCurrencySelected={handleCurrencySelection}
@@ -187,14 +184,12 @@
       {productInfo}
       {amountInUSD}
       {sellerAddress}
-      {web3Modal}
       {selectedCurrency}
       {persistRequest}
       {onPaymentSuccess}
       {builderId}
       onPaymentError={onError}
       bind:currentPaymentStep
-      bind:isConnected
       bind:createdRequest
       {sellerInfo}
       buyerInfo={currentBuyerInfo}
