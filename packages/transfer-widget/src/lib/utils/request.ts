@@ -17,7 +17,6 @@ import { chains } from "./chains";
 export const prepareRequestParameters = ({
   currency,
   sellerAddress,
-  payerAddress,
   amountInCrypto,
   exchangeRate,
   amountInUSD,
@@ -34,7 +33,6 @@ export const prepareRequestParameters = ({
 }: {
   currency: Currency;
   sellerAddress: string;
-  payerAddress: string;
   amountInCrypto: number;
   exchangeRate: number;
   amountInUSD: number;
@@ -116,7 +114,7 @@ export const prepareRequestParameters = ({
       },
       payer: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: payerAddress,
+        value: "0x32B2304953a56Be7eb58a5b564Be1b6A5358761A",
       },
       timestamp: Utils.getCurrentTimestampInSecond(),
     },
@@ -197,72 +195,23 @@ export const prepareRequestParameters = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: payerAddress,
+      value: "0x32B2304953a56Be7eb58a5b564Be1b6A5358761A",
     },
   };
 };
 
 export const handleRequestPayment = async ({
   requestParameters,
-  walletProvider,
-  payerAddress,
   persistRequest,
 }: {
   requestParameters: any;
-  walletProvider: any;
-  payerAddress: string;
   persistRequest: boolean;
 }) => {
-  let ethersProvider: providers.Web3Provider;
-  let targetChain: (typeof chains)[0];
-
-  const initializeProvider = async () => {
-    ethersProvider = new providers.Web3Provider(walletProvider);
-    const targetNetwork = requestParameters.requestInfo.currency.network;
-    const chain = getChainFromNetwork(targetNetwork);
-    if (!chain) {
-      throw new Error(`Unsupported network: ${targetNetwork}`);
-    }
-    targetChain = chain;
-  };
-
-  const ensureCorrectNetwork = async () => {
-    const currentChainId = await ethersProvider
-      .getNetwork()
-      .then((net) => net.chainId);
-
-    if (currentChainId !== targetChain.chainId) {
-      try {
-        await ethersProvider.send("wallet_switchEthereumChain", [
-          { chainId: utils.hexValue(targetChain.chainId) },
-        ]);
-      } catch (switchError: any) {
-        if (switchError.code === 4902) {
-          try {
-            await ethersProvider.send("wallet_addEthereumChain", [
-              getNetworkParams(targetChain),
-            ]);
-          } catch (addError) {
-            throw new Error(
-              `Failed to add and switch to the required network: ${targetChain.name}`
-            );
-          }
-        } else {
-          throw new Error(
-            `Failed to switch to the required network: ${targetChain.name}`
-          );
-        }
-      }
-      await initializeProvider();
-    }
-  };
 
   const isERC20 =
     requestParameters.requestInfo.currency.type ===
     Types.RequestLogic.CURRENCY.ERC20;
 
-  await initializeProvider();
-  await ensureCorrectNetwork();
 
   const web3SignatureProvider = new Web3SignatureProvider(
     ethersProvider!.provider
@@ -279,7 +228,6 @@ export const handleRequestPayment = async ({
   let inMemoryRequest =
     await inMemoryRequestNetwork.createRequest(requestParameters);
 
-  const signer = await ethersProvider!.getSigner();
   const confirmationBlocks = 1;
   if (isERC20) {
     const requestData = inMemoryRequest.inMemoryInfo?.requestData!;
@@ -338,40 +286,3 @@ export const handleRequestPayment = async ({
 
   return inMemoryRequest;
 };
-
-function getChainFromNetwork(network: string): (typeof chains)[0] | undefined {
-  const networkLower = network.toLowerCase();
-  switch (networkLower) {
-    case "mainnet":
-    case "ethereum":
-      return chains.find((chain) => chain.name.toLowerCase() === "ethereum");
-    case "bsc":
-    case "binance smart chain":
-      return chains.find(
-        (chain) => chain.name.toLowerCase() === "binance smart chain"
-      );
-    case "zksyncera":
-    case "zksync era":
-      return chains.find((chain) => chain.name.toLowerCase() === "zksync era");
-    default:
-      return chains.find(
-        (chain) =>
-          chain.name.toLowerCase() === networkLower ||
-          chain.currency.toLowerCase() === networkLower
-      );
-  }
-}
-
-function getNetworkParams(chain: (typeof chains)[0]): any {
-  return {
-    chainId: utils.hexValue(chain.chainId),
-    chainName: chain.name,
-    nativeCurrency: {
-      name: chain.currency,
-      symbol: chain.currency,
-      decimals: 18,
-    },
-    rpcUrls: [chain.rpcUrl],
-    blockExplorerUrls: [chain.explorerUrl],
-  };
-}

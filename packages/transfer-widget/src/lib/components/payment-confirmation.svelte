@@ -247,7 +247,6 @@
             productInfo,
             sellerInfo,
             buyerInfo,
-            payerAddress,
             amountInCrypto,
             totalAmountInCrypto: totalPayment,
             exchangeRate,
@@ -260,8 +259,6 @@
 
           const request = await handleRequestPayment({
             requestParameters,
-            walletProvider,
-            payerAddress,
             persistRequest,
           });
 
